@@ -5,21 +5,21 @@ using UnityEngine;
 public class PanelManager : BaseSingleton<PanelManager>
 {
     private Dictionary<UIType, GameObject> panelDict = new Dictionary<UIType, GameObject>();
-    private Dictionary<UIType, BasePanel> panelInstanceDict = new Dictionary<UIType, BasePanel>();
-    
+    private Dictionary<string, BasePanel> panelInstanceDict = new Dictionary<string, BasePanel>();
+
     public void AddPanel(BasePanel basePanel)
     {
-        GameObject panel = Resources.Load<GameObject>(basePanel.uIType.Path);
-        GameObject panelGo = Instantiate(panel,GameObject.Find("Canvas").transform);
-        panelDict.Add(basePanel.uIType, panelGo);
-        panelInstanceDict.Add(basePanel.uIType, basePanel);
+        GameObject panel = Resources.Load<GameObject>(basePanel.UIType.Path);
+        GameObject panelGo = Instantiate(panel, GameObject.Find("Canvas").transform);
+        panelDict.Add(basePanel.UIType, panelGo);
+        panelInstanceDict.Add(basePanel.UIType.Name, basePanel);
         basePanel.Init();
     }
 
     public void AddPanel(BasePanel basePanel, BasePanel parentPanel)
     {
         AddPanel(basePanel);
-        
+
         // 如果指定了父Panel，建立父子关系
         if (parentPanel != null)
         {
@@ -38,7 +38,7 @@ public class PanelManager : BaseSingleton<PanelManager>
 
     public BasePanel GetPanelInstance(UIType uiType)
     {
-        panelInstanceDict.TryGetValue(uiType, out BasePanel panel);
+        panelInstanceDict.TryGetValue(uiType.Name, out BasePanel panel);
         return panel;
     }
 
@@ -51,9 +51,17 @@ public class PanelManager : BaseSingleton<PanelManager>
             {
                 panelInstance.ParentPanel.RemoveChildPanel(panelInstance);
             }
-            
+
             panelDict.Remove(uiType);
-            panelInstanceDict.Remove(uiType);
+            panelInstanceDict.Remove(uiType.Name);
         }
+    }
+    public T GetPanel<T>(string name) where T : BasePanel
+    {
+        panelInstanceDict.TryGetValue(name, out BasePanel panel);
+        T t = panel as T;
+        if (t == null)
+            return null;
+        return t;
     }
 }

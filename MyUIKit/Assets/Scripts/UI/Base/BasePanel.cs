@@ -5,7 +5,7 @@ using UnityEngine;
 
 public abstract class BasePanel
 {
-    public UIType uIType { get; private set; }
+    public UIType UIType { get; private set; }
     public BasePanel ParentPanel { get; private set; }
     private List<BasePanel> childPanels = new List<BasePanel>();
 
@@ -21,19 +21,19 @@ public abstract class BasePanel
     {
 
     }
-    public virtual void UpdataView()
+    public virtual void UpdateView()
     {
         
     }
     //UI暂停时执行的操作
     public virtual void OnPause()
     {
-        UITool.Instance.GetorAddPanelComponent<CanvasGroup>(uIType).blocksRaycasts = false;
+        UITool.Instance.GetorAddPanelComponent<CanvasGroup>(UIType).blocksRaycasts = false;
     }
     //UI继续时执行的操作
     public virtual void OnResume()
     {
-        UITool.Instance.GetorAddPanelComponent<CanvasGroup>(uIType).blocksRaycasts = true;
+        UITool.Instance.GetorAddPanelComponent<CanvasGroup>(UIType).blocksRaycasts = true;
     }
     public virtual void Init()
     {
@@ -79,7 +79,7 @@ public abstract class BasePanel
     public void CloseChildPanel(BasePanel childPanel)
     {
         RemoveChildPanel(childPanel);
-        PanelManager.Instance.RemovePanel(childPanel.uIType);
+        PanelManager.Instance.RemovePanel(childPanel.UIType);
         
         // 如果没有其他子Panel，恢复当前Panel
         if (childPanels.Count == 0)
