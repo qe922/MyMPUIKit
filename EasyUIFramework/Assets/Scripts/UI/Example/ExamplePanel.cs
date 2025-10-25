@@ -21,14 +21,24 @@ public class ExamplePanel : BasePanel
     }
     public override void ControllerInit()
     {
-        UITool.Instance.UITypeGetChildComponent<Button>(UIType, "BtnAdd").onClick.AddListener
-        (
-            () => { Num++; PlayerPrefs.Save(); UpdateView(); }
-        );
-        UITool.Instance.UITypeGetChildComponent<Button>(UIType, "BtnSub").onClick.AddListener
-        (
-            () => { Num--; PlayerPrefs.Save(); UpdateView(); }
-        );
+        UITool.Instance.UITypeGetChildComponent<Button>(UIType, "BtnAdd").onClick.AddListener(() =>
+        {
+            Num++;
+            PlayerPrefs.Save(); 
+            UpdateView(); 
+        });
+        UITool.Instance.UITypeGetChildComponent<Button>(UIType, "BtnSub").onClick.AddListener(() =>
+        {
+            Num--;
+            PlayerPrefs.Save(); 
+            UpdateView(); 
+        });
+        UITool.Instance.UITypeGetChildComponent<Button>(UIType, "BtnOpenSettingUI1").onClick.AddListener(() =>
+        {
+            BasePanel basePanel = PanelManager.Instance.AddPanel(new ExampleSettingPanel("UI1", () => { PanelManager.Instance.RemovePanel(nameof(ExampleSettingPanel)); }));
+            
+        });
+        
     }
     override public void UpdateView()
     {

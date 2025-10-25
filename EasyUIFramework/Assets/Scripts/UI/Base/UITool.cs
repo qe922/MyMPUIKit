@@ -16,23 +16,29 @@ namespace EasyUIFramework
         }
         public GameObject FindChildGameObject(Transform parent, string childName)
         {
-            Transform child = parent.Find(childName);
-            if (child != null)
-                return child.gameObject;
+            Transform[] transforms=parent.GetComponentsInChildren<Transform>();
+            foreach (var item in transforms)
+            {
+                if (item.name == childName)
+                {
+                    return item.gameObject;
+                }
+            }
             return null;
         }
         public T GetorAddChildComponent<T>(Transform parent, string childName) where T : Component
         {
-            GameObject go = FindChildGameObject(parent, childName);
-            if (go == null)
-                return null;
-            return GetorAddComponent<T>(go);
+            return GetorAddComponent<T>(FindChildGameObject(parent, childName));
         }
         public T UITypeGetChildComponent<T>(UIType uiType, string childName) where T : Component
         {
             GameObject go = PanelManager.Instance.GetDictPanel(uiType);
             if (go == null)
+            {
+                Debug.Log("UITypeGetChildComponent失败");
                 return null;
+            }
+                
             return GetorAddChildComponent<T>(go.transform, childName);
         }
         public GameObject UITypeGetChildGameObject(UIType uiType, string childName)

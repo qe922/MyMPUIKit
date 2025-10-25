@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace EasyUIFramework
@@ -48,17 +49,19 @@ namespace EasyUIFramework
         }
         public virtual void OnExit()
         {
-
+            GameObject.Destroy(PanelManager.Instance.GetPanelInstanceGameObject(UIType.Name));
         }
 
         // 添加子Panel
-        public void AddChildPanel(BasePanel childPanel)
+        public BasePanel AddChildPanel(BasePanel childPanel)
         {
             if (childPanel != null && !childPanels.Contains(childPanel))
             {
                 childPanel.ParentPanel = this;
                 childPanels.Add(childPanel);
+                return childPanel;
             }
+            return null;
         }
 
         // 移除子Panel
@@ -67,7 +70,7 @@ namespace EasyUIFramework
             if (childPanels.Remove(childPanel))
             {
                 childPanel.ParentPanel = null;
-                childPanel.OnExit();
+                //childPanel.OnExit();
             }
         }
         public void SetParentPanel(BasePanel parentPanel)

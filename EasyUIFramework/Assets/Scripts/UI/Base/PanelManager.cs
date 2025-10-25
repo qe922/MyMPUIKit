@@ -9,40 +9,44 @@ namespace EasyUIFramework
         private Dictionary<string, GameObject> panelDict = new Dictionary<string, GameObject>();
         private Dictionary<string, BasePanel> panelInstanceDict = new Dictionary<string, BasePanel>();
 
-        public void AddPanel(BasePanel basePanel)
+        public BasePanel AddPanel(BasePanel basePanel)
         {
             GameObject panel = Resources.Load<GameObject>(basePanel.UIType.Path);
             if (panel == null)
             {
                 Debug.Log(basePanel.UIType.Path+"为空");
-                return;
+                return null;
             }
                 
             GameObject Canvas = GameObject.Find("Canvas");
             if (Canvas == null)
             {
                 Debug.Log("Canvas为空");
-                return;
+                return null;
             }
             GameObject panelGo = Instantiate(panel, Canvas.transform);
             panelDict.Add(basePanel.UIType.Name, panelGo);
             panelInstanceDict.Add(basePanel.UIType.Name, basePanel);
             basePanel.Init();
+            return basePanel;
         }
 
-        public void AddPanel(BasePanel basePanel, BasePanel parentPanel)
+        public BasePanel AddPanel(BasePanel basePanel, BasePanel parentPanel)
         {
             AddPanel(basePanel);
             basePanel.SetParentPanel(parentPanel);
+            return basePanel;
         }
-        public void AsyncAddPanel(BasePanel basePanel)
+        public BasePanel AsyncAddPanel(BasePanel basePanel)
         {
             StartCoroutine(LoadPanelAsync(basePanel));
+            return basePanel;
         }
-        public void AsyncAddPanel(BasePanel basePanel, BasePanel parentPanel)
+        public BasePanel AsyncAddPanel(BasePanel basePanel, BasePanel parentPanel)
         {
             AsyncAddPanel(basePanel);
             basePanel.SetParentPanel(parentPanel);
+            return basePanel;
         }
         private IEnumerator LoadPanelAsync(BasePanel basePanel)
         {
@@ -76,16 +80,24 @@ namespace EasyUIFramework
             panelInstanceDict.TryGetValue(Name, out BasePanel panel);
             return panel;
         }
+        public GameObject GetPanelInstanceGameObject(string Name)
+        {
+            if (panelDict.TryGetValue(Name, out GameObject panel))
+                return panel;
+            else
+                return null;
+        }
 
         public void RemovePanel(string Name)
         {
             if (panelDict.ContainsKey(Name))
             {
                 var panelInstance = GetPanelInstance(Name);
-                if (panelInstance != null && panelInstance.ParentPanel != null)
+                if(panelInstance != null&& panelInstance.ParentPanel != null)
                 {
-                    panelInstance.ParentPanel.RemoveChildPanel(panelInstance);
+                    panelInstance.ParentPanel.CloseChildPanel(panelInstance);
                 }
+                panelInstance.OnExit();
                 panelDict.Remove(Name);
                 panelInstanceDict.Remove(Name);
             }

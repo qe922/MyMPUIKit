@@ -7,6 +7,6 @@ public class Test : MonoBehaviour
 {
     void Start()
     {
-        PanelManager.Instance.AddPanel(new ExamplePanel());
+        PanelManager.Instance.AsyncAddPanel(new ExamplePanel());
     }
 }
