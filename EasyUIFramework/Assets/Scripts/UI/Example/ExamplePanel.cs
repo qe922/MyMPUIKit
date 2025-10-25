@@ -36,6 +36,11 @@ public class ExamplePanel : BasePanel
         UITool.Instance.UITypeGetChildComponent<Button>(UIType, "BtnOpenSettingUI1").onClick.AddListener(() =>
         {
             BasePanel basePanel = PanelManager.Instance.AddPanel(new ExampleSettingPanel("UI1", () => { PanelManager.Instance.RemovePanel(nameof(ExampleSettingPanel)); }));
+
+        });
+        UITool.Instance.UITypeGetChildComponent<Button>(UIType, "BtnOpenSettingUI2").onClick.AddListener(() =>
+        {
+            BasePanel basePanel = PanelManager.Instance.AddPanel(new ExampleSettingPanel("UI2", () => { PanelManager.Instance.RemovePanel(nameof(ExampleSettingPanel)); }));
             
         });
         

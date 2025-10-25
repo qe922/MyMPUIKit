@@ -14,6 +14,7 @@ public class ExampleSettingPanel : BasePanel
     public ExampleSettingPanel() : base(Name) { }
     public ExampleSettingPanel(string ExplanationText, Action action) : this()
     {
+        
         this.ExplanationText = ExplanationText;
         this.action = action;
     }
