@@ -9,6 +9,10 @@ namespace EasyUIFramework
         public UIType UIType { get; private set; }
         public BasePanel ParentPanel { get; private set; }
         private List<BasePanel> childPanels = new List<BasePanel>();
+        public BasePanel(string name)
+        {
+            UIType = new UIType(name);
+        }
 
         public virtual void ModelInit()
         {
@@ -65,6 +69,10 @@ namespace EasyUIFramework
                 childPanel.ParentPanel = null;
                 childPanel.OnExit();
             }
+        }
+        public void SetParentPanel(BasePanel parentPanel)
+        {
+            this.ParentPanel = parentPanel;
         }
 
         // 打开子Panel时自动暂停父Panel
