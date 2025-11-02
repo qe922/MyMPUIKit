@@ -1,10 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
+
 namespace EasyUIFramework
 {
-    public class PanelManager : BaseSingleton<PanelManager>
+    /// <summary>
+    /// 面板管理器服务实现
+    /// </summary>
+    public class PanelManagerService : IPanelManager
     {
         private Dictionary<string, GameObject> panelDict = new Dictionary<string, GameObject>();
         private Dictionary<string, BasePanel> panelInstanceDict = new Dictionary<string, BasePanel>();
@@ -14,17 +17,17 @@ namespace EasyUIFramework
             GameObject panel = Resources.Load<GameObject>(basePanel.UIType.Path);
             if (panel == null)
             {
-                Debug.Log(basePanel.UIType.Path+"为空");
+                Debug.Log(basePanel.UIType.Path + "为空");
                 return null;
             }
-                
+
             GameObject Canvas = GameObject.Find("Canvas");
             if (Canvas == null)
             {
                 Debug.Log("Canvas为空");
                 return null;
             }
-            GameObject panelGo = Instantiate(panel, Canvas.transform);
+            GameObject panelGo = GameObject.Instantiate(panel, Canvas.transform);
             panelDict.Add(basePanel.UIType.Name, panelGo);
             panelInstanceDict.Add(basePanel.UIType.Name, basePanel);
             basePanel.Init();
@@ -37,34 +40,20 @@ namespace EasyUIFramework
             basePanel.SetParentPanel(parentPanel);
             return basePanel;
         }
+
         public BasePanel AsyncAddPanel(BasePanel basePanel)
         {
-            StartCoroutine(LoadPanelAsync(basePanel));
-            return basePanel;
+            // 这里需要MonoBehaviour来启动协程，所以暂时不支持异步
+            // 在实际项目中，可以通过依赖注入传递MonoBehaviour
+            Debug.LogWarning("异步加载面板需要MonoBehaviour支持，使用同步加载代替");
+            return AddPanel(basePanel);
         }
+
         public BasePanel AsyncAddPanel(BasePanel basePanel, BasePanel parentPanel)
         {
             AsyncAddPanel(basePanel);
             basePanel.SetParentPanel(parentPanel);
             return basePanel;
-        }
-        private IEnumerator LoadPanelAsync(BasePanel basePanel)
-        {
-            ResourceRequest resourceRequest = Resources.LoadAsync<GameObject>(basePanel.UIType.Path);
-            if (resourceRequest == null)
-                yield break;
-            yield return resourceRequest;
-            GameObject Canvas = GameObject.Find("Canvas");
-            if (Canvas == null)
-            {
-                Debug.Log("Canvas为空");
-                yield break;
-            }
-            GameObject panel = resourceRequest.asset as GameObject;
-            GameObject panelGo = Instantiate(panel, Canvas.transform);
-            panelDict.Add(basePanel.UIType.Name, panelGo);
-            panelInstanceDict.Add(basePanel.UIType.Name, basePanel);
-            basePanel.Init();
         }
 
         public GameObject GetDictPanel(UIType uiType)
@@ -75,33 +64,35 @@ namespace EasyUIFramework
                 return null;
         }
 
-        public BasePanel GetPanelInstance(string Name)
+        public BasePanel GetPanelInstance(string name)
         {
-            panelInstanceDict.TryGetValue(Name, out BasePanel panel);
+            panelInstanceDict.TryGetValue(name, out BasePanel panel);
             return panel;
         }
-        public GameObject GetPanelInstanceGameObject(string Name)
+
+        public GameObject GetPanelInstanceGameObject(string name)
         {
-            if (panelDict.TryGetValue(Name, out GameObject panel))
+            if (panelDict.TryGetValue(name, out GameObject panel))
                 return panel;
             else
                 return null;
         }
 
-        public void RemovePanel(string Name)
+        public void RemovePanel(string name)
         {
-            if (panelDict.ContainsKey(Name))
+            if (panelDict.ContainsKey(name))
             {
-                var panelInstance = GetPanelInstance(Name);
-                if(panelInstance != null&& panelInstance.ParentPanel != null)
+                var panelInstance = GetPanelInstance(name);
+                if (panelInstance != null && panelInstance.ParentPanel != null)
                 {
                     panelInstance.ParentPanel.CloseChildPanel(panelInstance);
                 }
                 panelInstance.OnExit();
-                panelDict.Remove(Name);
-                panelInstanceDict.Remove(Name);
+                panelDict.Remove(name);
+                panelInstanceDict.Remove(name);
             }
         }
+
         public T GetPanel<T>(string name) where T : BasePanel
         {
             panelInstanceDict.TryGetValue(name, out BasePanel panel);

@@ -10,46 +10,49 @@ namespace EasyUIFramework
         public UIType UIType { get; private set; }
         public BasePanel ParentPanel { get; private set; }
         private List<BasePanel> childPanels = new List<BasePanel>();
-        public BasePanel(string name)
+        
+        // DI服务引用
+        protected IPanelManager PanelManager { get; private set; }
+        protected IUITool UITool { get; private set; }
+        
+        public BasePanel(string name, IPanelManager panelManager, IUITool uiTool)
         {
             UIType = new UIType(name);
+            PanelManager = panelManager;
+            UITool = uiTool;
         }
 
-        public virtual void ModelInit()
-        {
-
-        }
-        public virtual void ViewInit()
-        {
-
-        }
-        public virtual void ControllerInit()
-        {
-
-        }
-        public virtual void UpdateView()
-        {
-
-        }
+        public virtual void ModelInit(){}
+    
+        public virtual void ViewInit(){}
+       
+        public virtual void ControllerInit(){}
+        
+        public virtual void UpdateView(){}
+       
+        
         //UI暂停时执行的操作
         public virtual void OnPause()
         {
-            UITool.Instance.GetorAddPanelComponent<CanvasGroup>(UIType).blocksRaycasts = false;
+            UITool.GetorAddPanelComponent<CanvasGroup>(UIType).blocksRaycasts = false;
         }
+        
         //UI继续时执行的操作
         public virtual void OnResume()
         {
-            UITool.Instance.GetorAddPanelComponent<CanvasGroup>(UIType).blocksRaycasts = true;
+            UITool.GetorAddPanelComponent<CanvasGroup>(UIType).blocksRaycasts = true;
         }
+        
         public virtual void Init()
         {
             ModelInit();
             ViewInit();
             ControllerInit();
         }
+        
         public virtual void OnExit()
         {
-            GameObject.Destroy(PanelManager.Instance.GetPanelInstanceGameObject(UIType.Name));
+            GameObject.Destroy(PanelManager.GetPanelInstanceGameObject(UIType.Name));
         }
 
         // 添加子Panel
@@ -73,6 +76,7 @@ namespace EasyUIFramework
                 //childPanel.OnExit();
             }
         }
+        
         public void SetParentPanel(BasePanel parentPanel)
         {
             this.ParentPanel = parentPanel;
@@ -82,7 +86,7 @@ namespace EasyUIFramework
         public void OpenChildPanel(BasePanel childPanel)
         {
             AddChildPanel(childPanel);
-            PanelManager.Instance.AddPanel(childPanel);
+            PanelManager.AddPanel(childPanel);
             // 暂停当前Panel
             this.OnPause();
         }
@@ -91,7 +95,7 @@ namespace EasyUIFramework
         public void CloseChildPanel(BasePanel childPanel)
         {
             RemoveChildPanel(childPanel);
-            PanelManager.Instance.RemovePanel(childPanel.UIType.Name);
+            PanelManager.RemovePanel(childPanel.UIType.Name);
 
             // 如果没有其他子Panel，恢复当前Panel
             if (childPanels.Count == 0)
@@ -107,7 +111,6 @@ namespace EasyUIFramework
             {
                 CloseChildPanel(childPanels[i]);
             }
-            
         }
     }
 }
