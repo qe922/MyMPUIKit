@@ -36,9 +36,14 @@ namespace EasyUIFramework
 
         public BasePanel AddPanel(BasePanel basePanel, BasePanel parentPanel)
         {
-            AddPanel(basePanel);
+            var panel = AddPanel(basePanel);
             basePanel.SetParentPanel(parentPanel);
-            return basePanel;
+            parentPanel.AddChildPanel(basePanel);
+            
+            // 暂停父面板
+            parentPanel.OnPause();
+            
+            return panel;
         }
 
         public BasePanel AsyncAddPanel(BasePanel basePanel)
@@ -51,9 +56,14 @@ namespace EasyUIFramework
 
         public BasePanel AsyncAddPanel(BasePanel basePanel, BasePanel parentPanel)
         {
-            AsyncAddPanel(basePanel);
+            var panel = AsyncAddPanel(basePanel);
             basePanel.SetParentPanel(parentPanel);
-            return basePanel;
+            parentPanel.AddChildPanel(basePanel);
+            
+            // 暂停父面板
+            parentPanel.OnPause();
+            
+            return panel;
         }
 
         public GameObject GetDictPanel(UIType uiType)
@@ -83,13 +93,28 @@ namespace EasyUIFramework
             if (panelDict.ContainsKey(name))
             {
                 var panelInstance = GetPanelInstance(name);
-                if (panelInstance != null && panelInstance.ParentPanel != null)
+                if (panelInstance != null)
                 {
-                    panelInstance.ParentPanel.CloseChildPanel(panelInstance);
+                    // 1. 先通知父面板移除子面板关系
+                    var parentPanel = panelInstance.ParentPanel;
+                    if (parentPanel != null)
+                    {
+                        parentPanel.RemoveChildPanel(panelInstance);
+                        
+                        // 检查父面板是否需要恢复
+                        if (parentPanel.ChildPanelCount == 0 && parentPanel.ParentPanel == null)
+                        {
+                            parentPanel.OnResume();
+                        }
+                    }
+                    
+                    // 2. 执行子面板的退出逻辑
+                    panelInstance.OnExit();
+                    
+                    // 3. 最后从字典中移除
+                    panelDict.Remove(name);
+                    panelInstanceDict.Remove(name);
                 }
-                panelInstance.OnExit();
-                panelDict.Remove(name);
-                panelInstanceDict.Remove(name);
             }
         }
 

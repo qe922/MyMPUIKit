@@ -17,8 +17,7 @@ namespace EasyUIFramework
             var uiTool = ServiceInitializer.GetUITool();
 
             // 创建并显示示例面板（通过依赖注入传递服务）
-            var examplePanel = new DIExamplePanel(panelManager, uiTool);
-            panelManager.AddPanel(examplePanel);
+            panelManager.AddPanel(new ExamplePanel(panelManager, uiTool));
             
             Debug.Log("DI示例已启动");
         }
