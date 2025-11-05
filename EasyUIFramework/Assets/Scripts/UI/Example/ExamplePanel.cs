@@ -24,18 +24,12 @@ namespace EasyUIFramework
             BtnSub = UITool.UITypeGetChildComponent<Button>(UIType, "BtnSub");
             NumText = UITool.UITypeGetChildComponent<Text>(UIType, "NumText");
             BtnOpenSettingPanel = UITool.UITypeGetChildComponent<Button>(UIType, "BtnOpenSettingUI");
-            
-
-
-
         }
         public override void ControllerInit()
         {
             BtnAdd?.onClick.AddListener(() => { Num++; UpdateView(); });
             BtnSub?.onClick.AddListener(() => { Num--; UpdateView(); });
             BtnOpenSettingPanel?.onClick.AddListener(OnButtonClick);
-
-
         }
         public override void UpdateView()
         {
