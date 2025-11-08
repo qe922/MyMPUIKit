@@ -5,7 +5,7 @@ namespace EasyUIFramework
     /// <summary>
     /// DI示例控制器
     /// </summary>
-    public class DIExampleController : MonoBehaviour
+    public class ExampleController : MonoBehaviour
     {
         private void Start()
         {

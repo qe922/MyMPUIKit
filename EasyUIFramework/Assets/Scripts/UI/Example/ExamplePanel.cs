@@ -19,6 +19,9 @@ namespace EasyUIFramework
 
         public override void ViewInit()
         {
+            //订阅事件
+            EventBus.Instance.RegisterListener("AmendNum", UpdateView);
+
             // 使用DI服务获取UI组件
             BtnAdd = UITool.UITypeGetChildComponent<Button>(UIType, "BtnAdd");
             BtnSub = UITool.UITypeGetChildComponent<Button>(UIType, "BtnSub");
@@ -27,8 +30,9 @@ namespace EasyUIFramework
         }
         public override void ControllerInit()
         {
-            BtnAdd?.onClick.AddListener(() => { Num++; UpdateView(); });
-            BtnSub?.onClick.AddListener(() => { Num--; UpdateView(); });
+            BtnAdd?.onClick.AddListener(() => { AddNum(); });
+            BtnSub?.onClick.AddListener(() => { SubNum(); });
+            
             BtnOpenSettingPanel?.onClick.AddListener(OnButtonClick);
         }
         public override void UpdateView()
@@ -41,9 +45,19 @@ namespace EasyUIFramework
             // 使用DI服务添加新面板，并建立父子关系
             var settingPanel = new ExampleSettingPanel(PanelManager, UITool);
             PanelManager.AddPanel(settingPanel, this);
-
             // 通过面板管理器来管理状态，而不是直接调用OnPause
             // 父面板的暂停状态由面板管理器在添加子面板时自动处理
+        }
+        private void AddNum()
+        {
+            Num++;
+            EventBus.Instance.Publish("AmendNum");
+        }
+
+        private void SubNum()
+        {
+            Num--;
+            EventBus.Instance.Publish("AmendNum");
         }
 
         public override void OnResume()

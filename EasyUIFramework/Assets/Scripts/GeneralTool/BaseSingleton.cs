@@ -8,7 +8,7 @@ public class BaseSingleton<T> : MonoBehaviour where T:BaseSingleton<T>
     public static T Instance { get { return _Instance; } }
     void Awake()
     {
-        if (Instance == null)
+        if (_Instance == null)
         {
             _Instance = this as T;
             DontDestroyOnLoad(this.gameObject);

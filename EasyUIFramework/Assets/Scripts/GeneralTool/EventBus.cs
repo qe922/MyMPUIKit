@@ -4,106 +4,202 @@ using UnityEngine;
 
 public class EventBus : BaseSingleton<EventBus>
 {
-    private Dictionary<string, List<Action<object>>> eventListeners = new Dictionary<string, List<Action<object>>>();
-    private Dictionary<string, List<Action>> eventListenersNoParam = new Dictionary<string, List<Action>>();
+    private Dictionary<string, List<Action>> eventHandlersNoParam = new Dictionary<string, List<Action>>();
+    private Dictionary<string, List<Delegate>> eventHandlers = new Dictionary<string, List<Delegate>>();
 
     /// <summary>
-    /// 注册事件监听器，第二个方法监听第一个方法触发的事件
+    /// 注册事件监听器（无参数）- 完整版本
     /// </summary>
     /// <param name="eventName">事件名称</param>
-    /// <param name="triggerAction">触发事件的方法</param>
-    /// <param name="listenerAction">监听事件的方法</param>
-    public void RegisterListener(string eventName, Action triggerAction, Action listenerAction)
+    /// <param name="listenerAction">监听方法</param>
+    public void RegisterListener(string eventName, Action listenerAction)
     {
-        if (!eventListenersNoParam.ContainsKey(eventName))
+        if (string.IsNullOrEmpty(eventName))
         {
-            eventListenersNoParam[eventName] = new List<Action>();
+            Debug.LogError("EventBus: Event name cannot be null or empty");
+            return;
         }
 
-        // 将监听器添加到事件
-        eventListenersNoParam[eventName].Add(listenerAction);
-
-        // 修改触发方法，使其在调用时发布事件
-        Action wrappedAction = () =>
+        if (listenerAction == null)
         {
-            triggerAction?.Invoke();
-            Publish(eventName);
-        };
+            Debug.LogError("EventBus: Listener action cannot be null");
+            return;
+        }
 
-        // 返回包装后的方法（如果需要的话，这里只是演示，实际使用时需要替换原来的触发方法）
+        if (!eventHandlersNoParam.ContainsKey(eventName))
+        {
+            eventHandlersNoParam.Add(eventName, new List<Action>());
+        }
+
+        var listeners = eventHandlersNoParam[eventName];
+        if (!listeners.Contains(listenerAction))
+        {
+            listeners.Add(listenerAction);
+            Debug.Log($"EventBus: Registered listener for event '{eventName}'");
+        }
     }
 
     /// <summary>
     /// 注册事件监听器（带参数版本）
     /// </summary>
-    public void RegisterListener<T>(string eventName, Action<T> triggerAction, Action<T> listenerAction)
+    /// <param name="eventName">事件名称</param>
+    /// <param name="listenerAction">监听方法</param>
+    public void RegisterListener<T>(string eventName, Action<T> listenerAction)
     {
-        if (!eventListeners.ContainsKey(eventName))
+        if (string.IsNullOrEmpty(eventName))
         {
-            eventListeners[eventName] = new List<Action<object>>();
+            Debug.LogError("EventBus: Event name cannot be null or empty");
+            return;
         }
 
-        // 将监听器添加到事件
-        eventListeners[eventName].Add((obj) => listenerAction?.Invoke((T)obj));
-
-        // 修改触发方法，使其在调用时发布事件
-        Action<T> wrappedAction = (param) =>
+        if (listenerAction == null)
         {
-            triggerAction?.Invoke(param);
-            Publish(eventName, param);
-        };
+            Debug.LogError("EventBus: Listener action cannot be null");
+            return;
+        }
 
-        // 返回包装后的方法（如果需要的话）
+        if (!eventHandlers.ContainsKey(eventName))
+        {
+            eventHandlers.Add(eventName, new List<Delegate>());
+        }
+
+        var listeners = eventHandlers[eventName];
+        if (!listeners.Contains(listenerAction))
+        {
+            listeners.Add(listenerAction);
+            Debug.Log($"EventBus: Registered typed listener for event '{eventName}'");
+        }
     }
 
     /// <summary>
     /// 发布事件（无参数）
     /// </summary>
+    /// <param name="eventName">事件名称</param>
     public void Publish(string eventName)
     {
-        if (eventListenersNoParam.ContainsKey(eventName))
+        if (string.IsNullOrEmpty(eventName))
         {
-            foreach (var listener in eventListenersNoParam[eventName])
+            Debug.LogError("EventBus: Event name cannot be null or empty");
+            return;
+        }
+
+        if (eventHandlersNoParam.ContainsKey(eventName))
+        {
+            var listeners = eventHandlersNoParam[eventName];
+            foreach (var listener in listeners)
             {
-                listener?.Invoke();
+                try
+                {
+                    listener?.Invoke();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"EventBus: Error invoking listener for event '{eventName}': {e.Message}");
+                }
             }
         }
     }
 
     /// <summary>
-    /// 发布事件（带参数）
+    /// 发布事件（带参数版本）
     /// </summary>
-    public void Publish(string eventName, object data)
+    /// <param name="eventName">事件名称</param>
+    /// <param name="eventData">事件数据</param>
+    public void Publish<T>(string eventName, T eventData)
     {
-        if (eventListeners.ContainsKey(eventName))
+        if (string.IsNullOrEmpty(eventName))
         {
-            foreach (var listener in eventListeners[eventName])
+            Debug.LogError("EventBus: Event name cannot be null or empty");
+            return;
+        }
+
+        if (eventHandlers.ContainsKey(eventName))
+        {
+            var listeners = eventHandlers[eventName];
+            foreach (var listener in listeners)
             {
-                listener?.Invoke(data);
+                try
+                {
+                    if (listener is Action<T> typedListener)
+                    {
+                        typedListener?.Invoke(eventData);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"EventBus: Type mismatch for event '{eventName}'. Expected: {typeof(T).Name}");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"EventBus: Error invoking typed listener for event '{eventName}': {e.Message}");
+                }
             }
         }
     }
 
     /// <summary>
-    /// 移除事件监听器
+    /// 移除事件监听器（无参数）
     /// </summary>
+    /// <param name="eventName">事件名称</param>
+    /// <param name="listenerAction">监听方法</param>
     public void RemoveListener(string eventName, Action listenerAction)
     {
-        if (eventListenersNoParam.ContainsKey(eventName))
+        if (string.IsNullOrEmpty(eventName))
         {
-            eventListenersNoParam[eventName].Remove(listenerAction);
+            Debug.LogError("EventBus: Event name cannot be null or empty");
+            return;
+        }
+
+        if (listenerAction == null)
+        {
+            Debug.LogError("EventBus: Listener action cannot be null");
+            return;
+        }
+
+        if (eventHandlersNoParam.ContainsKey(eventName))
+        {
+            var listeners = eventHandlersNoParam[eventName];
+            listeners.Remove(listenerAction);
+            
+            // 如果该事件没有监听器了，移除整个事件
+            if (listeners.Count == 0)
+            {
+                eventHandlersNoParam.Remove(eventName);
+                Debug.Log($"EventBus: Removed listener for event '{eventName}'");
+            }
         }
     }
 
     /// <summary>
     /// 移除事件监听器（带参数版本）
     /// </summary>
+    /// <param name="eventName">事件名称</param>
+    /// <param name="listenerAction">监听方法</param>
     public void RemoveListener<T>(string eventName, Action<T> listenerAction)
     {
-        if (eventListeners.ContainsKey(eventName))
+        if (string.IsNullOrEmpty(eventName))
         {
-            // 需要找到对应的包装方法并移除
-            // 这里简化处理，实际实现可能需要更复杂的逻辑
+            Debug.LogError("EventBus: Event name cannot be null or empty");
+            return;
+        }
+
+        if (listenerAction == null)
+        {
+            Debug.LogError("EventBus: Listener action cannot be null");
+            return;
+        }
+
+        if (eventHandlers.ContainsKey(eventName))
+        {
+            var listeners = eventHandlers[eventName];
+            listeners.Remove(listenerAction);
+            
+            // 如果该事件没有监听器了，移除整个事件
+            if (listeners.Count == 0)
+        {
+            eventHandlers.Remove(eventName);
+            Debug.Log($"EventBus: Removed typed listener for event '{eventName}'");
+            }
         }
     }
 
@@ -112,7 +208,46 @@ public class EventBus : BaseSingleton<EventBus>
     /// </summary>
     public void ClearAllListeners()
     {
-        eventListeners.Clear();
-        eventListenersNoParam.Clear();
+        eventHandlers.Clear();
+        eventHandlersNoParam.Clear();
+        Debug.Log("EventBus: Cleared all listeners");
+    }
+
+    /// <summary>
+    /// 检查事件是否有监听器
+    /// </summary>
+    /// <param name="eventName">事件名称</param>
+    /// <returns>是否有监听器</returns>
+    public bool HasListeners(string eventName)
+    {
+        if (string.IsNullOrEmpty(eventName))
+            return false;
+
+        return (eventHandlersNoParam.ContainsKey(eventName) && eventHandlersNoParam[eventName].Count > 0) ||
+               (eventHandlers.ContainsKey(eventName) && eventHandlers[eventName].Count > 0);
+    }
+
+    /// <summary>
+    /// 获取指定事件的监听器数量
+    /// </summary>
+    /// <param name="eventName">事件名称</param>
+    /// <returns>监听器数量</returns>
+    public int GetListenerCount(string eventName)
+    {
+        if (string.IsNullOrEmpty(eventName))
+            return 0;
+
+        int count = 0;
+        if (eventHandlersNoParam.ContainsKey(eventName))
+        {
+            count += eventHandlersNoParam[eventName].Count;
+        }
+
+        if (eventHandlers.ContainsKey(eventName))
+        {
+            count += eventHandlers[eventName].Count;
+        }
+
+        return count;
     }
 }
